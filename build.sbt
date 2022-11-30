@@ -1,11 +1,10 @@
-import xerial.sbt.Sonatype.GitHubHosting
 
 val mainScala = "2.13.8"
 val allScala  = Seq("2.12.15", mainScala, "3.1.1")
 
 inThisBuild(
   List(
-    organization                     := "nl.vroste",
+    organization                     := "com.disneystreaming.weaponx.zio-kinesis",
     homepage                         := Some(url("https://github.com/svroonland/zio-kinesis")),
     licenses                         := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     scalaVersion                     := mainScala,
@@ -23,9 +22,6 @@ inThisBuild(
     scmInfo                          := Some(
       ScmInfo(url("https://github.com/svroonland/zio-kinesis/"), "scm:git:git@github.com:svroonland/zio-kinesis.git")
     ),
-    sonatypeProjectHosting           := Some(
-      GitHubHosting("svroonland", "zio-kinesis", "info@vroste.nl")
-    ),
     developers                       := List(
       Developer(
         "svroonland",
@@ -34,7 +30,16 @@ inThisBuild(
         url("https://github.com/svroonland")
       )
     ),
-    resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+    // resolvers += "Sonatype OSS Snapshots" at "https://artifactory.us-east-1.bamgrid.net/artifactory/weaponx-maven-local",
+    publishTo                        := Some(
+      "Artifactory Realm" at "https://artifactory.us-east-1.bamgrid.net/artifactory/weaponx-maven-local"
+    ),
+    credentials += Credentials(
+      "Artifactory Realm",
+      "artifactory.us-east-1.bamgrid.net",
+      "weaponx-build",
+      "<weaponx-build-1password-here"
+    )
   )
 )
 
@@ -62,12 +67,13 @@ lazy val core = (project in file("core"))
   )
 
 lazy val stdSettings: Seq[sbt.Def.SettingsDefinition] = Seq(
+  Compile / compile / javacOptions ++= Seq("--release", "8"),
   Compile / compile / scalacOptions ++= {
     // This is for scala.collection.compat._
     if (scalaBinaryVersion.value == "2.13")
       Seq("-Wconf:cat=unused-imports:silent")
     else Seq.empty
-  },
+  } ++ Seq("-release", "8"),
   Test / compile / scalacOptions ++= {
     // This is for scala.collection.compat._
     if (scalaBinaryVersion.value == "2.13")
